@@ -5,6 +5,7 @@ import random
 import asyncio
 import concurrent.futures
 
+
 # tasks = []
 
 
@@ -19,6 +20,7 @@ def mul_atom(a, b):
     res = list(spec_mul(a, mut_b))
     return res
 
+
 def write_matrix_sync(a, b, offset_a, offset_b, row_size, c):
     """метод выполняет основное вычислительное действие, поэтому его и распараллеливаем"""
     res = mul_atom(a, b)
@@ -27,6 +29,7 @@ def write_matrix_sync(a, b, offset_a, offset_b, row_size, c):
         for j in range(len(res[0])):
             if res[i][j] and row_delta + j < len(c):
                 c[row_delta + j] += res[i][j]
+
 
 def recurse_mul_sync(a, b, n, offset_a, offset_b, row_size, c):
     """рекурсивный метод, разбивающий матрицу на более мелкие"""
@@ -58,6 +61,7 @@ def recurse_mul_sync(a, b, n, offset_a, offset_b, row_size, c):
         recurse_mul_sync(a_new_21, b_new_12, n_new, n_new + offset_a, offset_b + n_new, row_size, c),
         recurse_mul_sync(a_new_22, b_new_22, n_new, n_new + offset_a, offset_b + n_new, row_size, c)
 
+
 def mul_matrix_sync(a, b):
     """Основной метод для перемножения матриц"""
     if len(a[0]) != len(b):
@@ -82,7 +86,6 @@ def write_matrix(a, b, offset_a, offset_b, row_size, c):
         for j in range(len(res[0])):
             if res[i][j] and row_delta + j < len(c):
                 c[row_delta + j] += res[i][j]
-
 
 
 async def recurse_mul(a, b, n, offset_a, offset_b, row_size, c, executor):
@@ -123,6 +126,7 @@ async def recurse_mul(a, b, n, offset_a, offset_b, row_size, c, executor):
     finally:
         loop.close()
 
+
 def slice_spec(arr, m, n):
     return [arr[i][m[0]:m[1]] for i in range(n[0], n[1])]
 
@@ -138,6 +142,7 @@ def create_to_sqr(a, size):
     if len(a) < size:
         a.append([0] * size)
     return a
+
 
 def mul_matrix(a, b):
     """Основной метод для перемножения матриц"""

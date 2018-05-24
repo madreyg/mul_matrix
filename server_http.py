@@ -52,8 +52,7 @@ class Matrix(tornado.web.RequestHandler):
         print(" [x] Sent %r" % (message,))
         connection.close()
 
-
-    @ tornado.web.asynchronous
+    @tornado.web.asynchronous
     def get(self):
         self.worker(self.worker_get)
 
