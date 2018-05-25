@@ -1,13 +1,8 @@
 import tornado.ioloop
 import tornado.web
-import redis
 import uuid
-import matrix as mt
-from time import time
+import matrix
 import threading
-import pika
-import sys
-import json
 
 
 class Matrix(tornado.web.RequestHandler):
@@ -17,40 +12,28 @@ class Matrix(tornado.web.RequestHandler):
 
     def worker_get(self):
         id_ = self.get_argument("uuid", default=None, strip=False)
-        rd = connect_redis()
-        result = rd.get(id_)
-        status = False
-        if result:
-            status = True
-        # print(str(result))
-        self.write({'status': status, 'data': list(result)})
+        rd = matrix.connect_redis()
+        status = int(rd.get(id_ + "_count"))
+        print(int(status))
+        answer = False
+        result = []
+        print(status == 0)
+        print(type(status))
+        if not status:
+            answer = True
+            result = rd.lpop(id_ + "_result")
+        self.write({'status': answer, 'data': list(result)})
         self.finish()
 
     def worker_post(self):
-        matrix = tornado.escape.json_decode(self.request.body)
-        id_ = str(uuid.uuid4())
-        print("uuid: ", id_)
-        rd = connect_redis()
-        rd.set(id_, '')
-        # a = matrix['a']
-        # b = matrix['b']
-        self.write({'uuid': id_})
+        mtxs = tornado.escape.json_decode(self.request.body)
+        id = str(uuid.uuid4())
+        print("uuid: ", id)
+        a = mtxs['a']
+        b = mtxs['b']
+        matrix.mul_matrix_sync(id, a, b)
+        self.write({'uuid': id})
         self.finish()
-        connection = pika.BlockingConnection(pika.ConnectionParameters(
-            host='localhost', port=32770))
-        channel = connection.channel()
-
-        channel.queue_declare(queue='task_queue', durable=True)
-
-        message = json.dumps("id_:{}".format(matrix["a"]))
-        channel.basic_publish(exchange='',
-                              routing_key='task_queue',
-                              body=message,
-                              properties=pika.BasicProperties(
-                                  delivery_mode=2,  # make message persistent
-                              ))
-        print(" [x] Sent %r" % (message,))
-        connection.close()
 
     @tornado.web.asynchronous
     def get(self):
@@ -61,24 +44,10 @@ class Matrix(tornado.web.RequestHandler):
         self.worker(self.worker_post)
 
 
-def run_mul(a, b):
-    res = mt.mul_matrix(a, b)
-    return res
-
-
-def run_mul_sync(a, b):
-    res = mt.mul_matrix_sync(a, b)
-    return res
-
-
 def make_app():
     return tornado.web.Application([
         (r"/matrix/", Matrix),
     ])
-
-
-def connect_redis():
-    return redis.StrictRedis(host='localhost', port=6379, db=0)
 
 
 if __name__ == "__main__":
