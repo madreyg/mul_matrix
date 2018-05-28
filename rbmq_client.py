@@ -2,6 +2,10 @@ import pika
 
 
 def send_msg(msg):
+    """
+    метод для работы с RabbitMQ
+    """
+    # todo: вынести в конфиг файл
     connection = pika.BlockingConnection(pika.ConnectionParameters(
         host='localhost', port=32774))
     channel = connection.channel()

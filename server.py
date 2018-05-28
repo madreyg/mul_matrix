@@ -3,10 +3,10 @@ import tornado.web
 import redis
 import uuid
 import matrix as mt
-from time import time
 import threading
 
 a = 0
+
 
 class Matrix(tornado.web.RequestHandler):
     def worker(self, func):
@@ -20,37 +20,21 @@ class Matrix(tornado.web.RequestHandler):
         status = False
         if result:
             status = True
-        # print(str(result))
         self.write({'status': status, 'data': list(result)})
         self.finish()
 
     def worker_post(self):
         matrix = tornado.escape.json_decode(self.request.body)
-        id_ = str(uuid.uuid4())
-        print("uuid: ", id_)
+        id_req = str(uuid.uuid4())
         rd = connect_redis()
-        rd.set(id_, '')
-        a = matrix['a']
-        b = matrix['b']
-        self.write({'uuid': id_})
+        rd.set(id_req, '')
+        left_mtx = matrix['a']
+        right_mtx = matrix['b']
+        self.write({'uuid': id_req})
         self.finish()
-        t1 = time()
-        res = run_mul_sync(a, b)
-        t2 = time()
-        print("matrix calculated sync by uuid {id}. Time: {time}".format(id=id_, time=str(t2 - t1)))
-        t1 = time()
-        # res2 = run_mul_sync(a, b)
-        t2 = time()
-        print("matrix calculated by uuid {id}. Time: {time}".format(id=id_, time=str(t2 - t1)))
-        print(res)
-        t1 = time()
-        result2 = mt.mul_on_numpy(a, b)
-        t2 = time()
-        print("Проверка: " + str(list(result2)) + " time: " + str(t2-t1))
-        # print("Проверка: "  + " time: " + str(t2-t1))
-
-
-        rd.set(id_, res)
+        res = run_mul(id_req, left_mtx, right_mtx)
+        # result2 = mt.mul_on_numpy(a, b)
+        rd.set(id_req, res)
 
     @tornado.web.asynchronous
     def get(self):
@@ -61,12 +45,8 @@ class Matrix(tornado.web.RequestHandler):
         self.worker(self.worker_post)
 
 
-def run_mul(a, b):
-    res = mt.mul_matrix(a, b)
-    return res
-
-def run_mul_sync(a, b):
-    res = mt.mul_matrix_sync(a, b)
+def run_mul(id_req, a, b):
+    res = mt.mul_matrix(id_req, a, b)
     return res
 
 

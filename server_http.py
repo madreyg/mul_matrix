@@ -34,7 +34,7 @@ class Matrix(tornado.web.RequestHandler):
         print("uuid: ", id)
         a = mtxs['a']
         b = mtxs['b']
-        matrix.mul_matrix_sync(id, a, b)
+        matrix.mul_matrix(id, a, b)
         self.write({'uuid': id})
         self.finish()
 
