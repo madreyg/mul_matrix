@@ -3,6 +3,7 @@ import json
 import time
 import requests
 import random
+import matrix
 
 
 def create_matr(n):
@@ -23,9 +24,13 @@ def check_status(uuid):
 
 
 def main(n, m):
+    mtx_a = create_matr(n)
+    mtx_b = create_matr(m)
     response = requests.post('http://localhost:8888/matrix/', json.dumps({
-        'a': create_matr(n),
-        'b': create_matr(m),
+        # 'a': [[1, 2, 3, 4], [5, 6, 7, 8], [1, 2, 3, 4], [5, 6, 7, 8]],
+        'a': mtx_a,
+        # 'b': [[1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1]],
+        'b': mtx_b,
     }))
     response_json = response.json()
 
@@ -37,7 +42,8 @@ def main(n, m):
         status = result.get('status', False)
         print('status', status)
         if status:
-            print('data', len(result.get('data', '')), "o my data shalala")
+            print('data', result.get('data', ''), "o my data shalala")
+            print("проверка ", matrix.mul_on_numpy(mtx_a, mtx_b))
             break
         time.sleep(5)
     print('finished')

@@ -3,6 +3,7 @@ import tornado.web
 import uuid
 import matrix
 import threading
+import redis_client
 
 
 class Matrix(tornado.web.RequestHandler):
@@ -12,7 +13,7 @@ class Matrix(tornado.web.RequestHandler):
 
     def worker_get(self):
         id_ = self.get_argument("uuid", default=None, strip=False)
-        rd = matrix.connect_redis()
+        rd = redis_client.connect_redis()
         status = int(rd.get(id_ + "_count"))
         print(int(status))
         answer = False
@@ -21,7 +22,9 @@ class Matrix(tornado.web.RequestHandler):
         print(type(status))
         if not status:
             answer = True
-            result = rd.lpop(id_ + "_result")
+            result = [int(x.decode('utf-8')) for x in rd.lrange(id_ + "_result", 0, -1)]
+            print("result ", result)
+            rd.delete(id_ + "_result", id_ + "_count")
         self.write({'status': answer, 'data': list(result)})
         self.finish()
 
